@@ -1,0 +1,26 @@
+[
+  {
+    "houseName": "dixit",
+    "price": "5000",
+    "location": "Ahmedabad",
+    "rating": "5",
+    "photoUrl": "https://www.orangetree.in/cdn/shop/files/Collection.jpg?v=1755749344",
+    "id": "7"
+  },
+  {
+    "houseName": "dixit",
+    "price": "5000",
+    "location": "Ahmedabad",
+    "rating": "5",
+    "photoUrl": "https://scontent.famd5-1.fna.fbcdn.net/v/t39.30808-6/307954314_217317150617908_6262600128258019430_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=j_6zEFs35QIQ7kNvwFMSxzB&_nc_oc=Adrl0x33srpDdVDaTxSKBoA0f6_HQQt5ofTPIYilW83C4SlrbgSCEVS6zD2COOUTaWY&_nc_zt=23&_nc_ht=scontent.famd5-1.fna&_nc_gid=Pe6WqBzlUqKa1ArYiFwjbQ&_nc_ss=7b2a8&oh=00_Af4--Jha0lQl929QUEMj6f75Wo0Myr2zikvcPCcMfu959w&oe=69FBB423",
+    "id": "1777717853461"
+  },
+  {
+    "houseName": "3D Home",
+    "price": "2500",
+    "location": "Ahmedabad",
+    "rating": "5",
+    "photoUrl": "https://assets-news.housing.com/news/wp-content/uploads/2023/03/24153828/exterior-design-shutterstock_1932966368-1200x700-compressed.jpg",
+    "id": "1777877436678"
+  }
+]
