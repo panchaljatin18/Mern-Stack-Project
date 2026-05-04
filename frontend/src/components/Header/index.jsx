@@ -74,7 +74,7 @@ export default function Header() {
                 fontSize: 18, flexShrink: 0,
               }}
             >
-              🏠
+              <i className="fas fa-home" style={{ color: "#fff" }} />
             </div>
             <span
               className="gradient-text animate-fade-down"

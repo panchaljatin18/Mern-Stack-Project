@@ -21,7 +21,7 @@ export default function SecondSection() {
     try {
       const data = await api.addFavourite(id);
       if (data.success) {
-        setSuccessMsg("❤️ Added to Favourites!");
+        setSuccessMsg("Success! Added to Favourites.");
         setTimeout(() => setSuccessMsg(""), 3000);
       }
     } catch { /* silently fail */ }
@@ -64,7 +64,7 @@ export default function SecondSection() {
             </div>
           ) : homes.length === 0 ? (
             <div className="text-center py-20 px-6 text-slate-400 text-base font-semibold">
-              <div className="text-[56px] mb-4">🏚️</div>
+              <div className="text-[56px] mb-4 text-slate-300"><i className="fas fa-house-circle-xmark"></i></div>
               No homes available yet.
             </div>
           ) : (
