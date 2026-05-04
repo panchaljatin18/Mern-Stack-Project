@@ -72,7 +72,7 @@ export default function HeroSection() {
             { value: "2,400+", label: "Homes", icon: "fa-house-chimney", color: "#f43f5e" },
             { value: "18K+", label: "Guests", icon: "fa-users", color: "#22c55e" },
             { value: "120+", label: "Cities", icon: "fa-location-dot", color: "#38bdf8" },
-            { value: "4.9★", label: "Rating" },
+            { value: "4.9", label: "Rating" },
           ].map((stat) => (
             <div
               key={stat.label}
