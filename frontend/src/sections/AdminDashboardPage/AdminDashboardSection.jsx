@@ -268,6 +268,7 @@ export default function AdminPage() {
         </p>
 
         {activeTab === "overview" && (
+
           <div
             style={{
               display: "grid",
@@ -310,6 +311,64 @@ export default function AdminPage() {
 
               <h1>{admins.length || 1}</h1>
             </div>
+          </div>
+        )}
+        {activeTab === "homes" && (
+          <div style={{ marginTop: 30 }}>
+            <h2 style={{ marginBottom: 20 }}>All Homes</h2>
+
+            {homes.length === 0 ? (
+              <p>No homes found.</p>
+            ) : (
+              homes.map((home, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: 20,
+                    borderRadius: 16,
+                    background: "rgba(255,255,255,0.03)",
+                    marginBottom: 16,
+                  }}
+                >
+                  <h3>{home.houseName}</h3>
+
+                  <p>Location: {home.location}</p>
+
+                  <p>Price: ₹{home.price}</p>
+
+                  <p>Rating: {home.rating}</p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+
+        {activeTab === "bookings" && (
+          <div style={{ marginTop: 30 }}>
+            <h2 style={{ marginBottom: 20 }}>All Bookings</h2>
+
+            {bookings.length === 0 ? (
+              <p>No bookings found.</p>
+            ) : (
+              bookings.map((booking, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: 20,
+                    borderRadius: 16,
+                    background: "rgba(255,255,255,0.03)",
+                    marginBottom: 16,
+                  }}
+                >
+                  <h3>{booking.houseName}</h3>
+
+                  <p>User: {booking.userName}</p>
+
+                  <p>Booked At: {booking.bookedAt}</p>
+                </div>
+              ))
+            )}
           </div>
         )}
 
