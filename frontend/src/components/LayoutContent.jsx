@@ -23,6 +23,10 @@ export default function LayoutContent({ children }) {
       // Not logged in and trying to access protected page
       setIsAuthorized(false);
       router.push("/login");
+    } else if (token && isPublicPage && pathname !== "/admin-login") {
+      // Already logged in but on a public auth page (except admin login)
+      setIsAuthorized(true);
+      router.push("/");
     } else {
       // Logged in OR accessing public page
       setIsAuthorized(true);

@@ -3,19 +3,35 @@
 import { useEffect, useState } from "react";
 import HomeCard from "../../../components/HomeCard";
 import Toast from "../../../components/Toast";
+import LoginModal from "../../../components/LoginModal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api } from "../../../lib/api";
 
 export default function SecondSection() {
+  const router = useRouter();
   const [homes, setHomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     api.getHomes()
       .then((data) => { setHomes(data); setLoading(false); })
       .catch(() => { setHomes([]); setLoading(false); });
   }, []);
+
+  const checkAuth = () => {
+    return !!localStorage.getItem("token");
+  };
+
+  const handleAction = (action) => {
+    if (!checkAuth()) {
+      setShowLoginModal(true);
+      return;
+    }
+    action();
+  };
 
   const addToFavourite = async (id) => {
     try {
@@ -30,28 +46,27 @@ export default function SecondSection() {
   return (
     <>
       <Toast message={successMsg} />
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+      
       <section className="bg-slate-50 py-[72px] pb-[96px]">
         <div className="max-w-[1200px] mx-auto px-6">
-
-          {/* Section header */}
+          {/* ... existing header ... */}
           <div className="animate-fade-up mb-12">
             <p className="text-[12px] font-bold text-indigo-500 tracking-[1.5px] uppercase m-0 mb-2.5">
               ✦ Featured Listings
             </p>
             <div className="flex items-end justify-between flex-wrap gap-4">
-              <h2
-                className="font-black text-slate-900 m-0 tracking-[-0.5px]"
-                style={{ fontSize: "clamp(1.6rem,3vw,2.2rem)" }}
-              >
+              <h2 className="font-black text-slate-900 m-0 tracking-[-0.5px]" style={{ fontSize: "clamp(1.6rem,3vw,2.2rem)" }}>
                 Homes you'll love
               </h2>
-              <Link
-                href="/bookings"
+              <button
+                onClick={() => handleAction(() => router.push("/bookings"))}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
                 className="text-[13px] font-bold text-indigo-500 no-underline flex items-center gap-1.5 transition-all duration-200 hover:gap-2.5 group"
               >
                 View bookings
                 <i className="fas fa-arrow-right text-[11px]" />
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -76,16 +91,16 @@ export default function SecondSection() {
                 >
                   <HomeCard home={home}>
                     <div className="flex gap-2">
-                      <Link
-                        href={`/home-details/${home.id}`}
+                      <button
+                        onClick={() => handleAction(() => router.push(`/home-details/${home.id}`))}
                         className="flex-1 text-center bg-slate-900 text-white py-2.5 rounded-lg no-underline font-bold text-[13px] transition-colors duration-200 hover:bg-slate-800"
                       >
                         <i className="fas fa-eye mr-1.5" />
                         Details
-                      </Link>
+                      </button>
                       <button
-                        onClick={() => addToFavourite(home.id)}
-                        className="flex-1 bg-gradient-to-br from-rose-500 to-rose-600 text-white py-2.5 border-none rounded-lg cursor-none font-bold text-[13px] transition-opacity duration-200 hover:opacity-90"
+                        onClick={() => handleAction(() => addToFavourite(home.id))}
+                        className="flex-1 bg-gradient-to-br from-rose-500 to-rose-600 text-white py-2.5 border-none rounded-lg cursor-pointer font-bold text-[13px] transition-opacity duration-200 hover:opacity-90"
                       >
                         <i className="fas fa-heart mr-1.5" />
                         Save

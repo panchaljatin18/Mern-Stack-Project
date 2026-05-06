@@ -1,17 +1,36 @@
 "use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import LoginModal from "../../../components/LoginModal";
 
 export default function HeroSection() {
+  const router = useRouter();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const checkAuth = () => {
+    return !!localStorage.getItem("token");
+  };
+
+  const handleAction = (to) => {
+    if (!checkAuth()) {
+      setShowLoginModal(true);
+      return;
+    }
+    router.push(to);
+  };
+
   return (
     <section className="relative overflow-hidden min-h-[88vh] flex items-center justify-center bg-slate-900">
-      {/* Single soft orb — left */}
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+      {/* ... existing orbs ... */}
       <div
         className="absolute top-[-10%] left-[-5%] w-[560px] h-[560px] rounded-full pointer-events-none"
         style={{
           background: "radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%)",
         }}
       />
-      {/* Single soft orb — right */}
       <div
         className="absolute bottom-[-10%] right-[-5%] w-[480px] h-[480px] rounded-full pointer-events-none"
         style={{
@@ -49,21 +68,23 @@ export default function HeroSection() {
 
         {/* CTA buttons */}
         <div className="animate-fade-up delay-200 flex gap-3 justify-center flex-wrap">
-          <Link
-            href="/favourites"
+          <button
+            onClick={() => handleAction("/favourites")}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
             className="inline-flex items-center gap-[9px] py-[14px] px-[32px] rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white font-bold text-[14px] no-underline shadow-[0_6px_24px_rgba(99,102,241,0.35)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_32px_rgba(99,102,241,0.45)]"
           >
             <i className="fas fa-heart text-[13px]" />
             View Favourites
-          </Link>
+          </button>
 
-          <Link
-            href="/host/add-home"
+          <button
+            onClick={() => handleAction("/host/add-home")}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
             className="inline-flex items-center gap-[9px] py-[14px] px-[32px] rounded-xl bg-white/5 border border-white/10 text-white/85 font-bold text-[14px] no-underline transition-all duration-200 hover:bg-white/10 hover:-translate-y-[2px]"
           >
             <i className="fas fa-plus text-[13px]" />
             List Your Home
-          </Link>
+          </button>
         </div>
 
         {/* Stats — clean pill row */}

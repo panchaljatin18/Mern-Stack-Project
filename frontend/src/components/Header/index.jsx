@@ -64,15 +64,15 @@ export default function Header() {
     { to: "/About-us", label: "About", icon: "fa-circle-info" },
   ];
 
-  if (!isAdmin) {
-    currentLinks.push({ to: "/admin-login", label: "Admin Login", icon: "fa-shield-halved" });
-  }
-
   if (user) {
     currentLinks.push(...protectedLinks);
     if (isAdmin) {
       currentLinks.push(...adminLinks);
     }
+  }
+
+  if (!isAdmin) {
+    currentLinks.push({ to: "/admin-login", label: "Admin Login", icon: "fa-shield-halved" });
   }
 
   return (
