@@ -9,6 +9,20 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/admin-panel',
+        destination: '/admin',
+        permanent: true,
+      },
+      {
+        source: '/admin/dashboard',
+        destination: '/admin',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

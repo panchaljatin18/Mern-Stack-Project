@@ -46,7 +46,7 @@ export default function AdminLoginPageSection() {
         if (data.success) {
           localStorage.setItem("token", data.token);
           localStorage.setItem("admin", JSON.stringify(data.user));
-          router.push("/host/homes");
+          router.push("/admin");
         }
       }
     } catch (err) {
