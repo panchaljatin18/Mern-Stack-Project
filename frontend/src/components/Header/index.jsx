@@ -9,9 +9,6 @@ const links = [
   { to: "/About-us", label: "About", icon: "fa-circle-info" },
   { to: "/favourites", label: "Favourites", icon: "fa-heart" },
   { to: "/bookings", label: "Bookings", icon: "fa-calendar-check" },
-  { to: "/host/homes", label: "Host", icon: "fa-user-tie" },
-  { to: "/host/add-home", label: "Add Home", icon: "fa-plus" },
-  { to: "/admin-login", label: "Admin", icon: "fa-shield-halved" },
 ];
 
 export default function Header() {
