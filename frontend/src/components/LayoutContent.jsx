@@ -13,22 +13,22 @@ export default function LayoutContent({ children }) {
   const [checkingAuth, setCheckingAuth] = useState(true);
   
   // Routes that don't require login
-  const authRoutes = ["/login", "/register", "/admin-login", "/forgot-password"];
-  const isAuthPage = authRoutes.includes(pathname) || pathname.startsWith("/reset-password");
+  const publicRoutes = ["/", "/About-us", "/login", "/register", "/admin-login", "/forgot-password"];
+  const isPublicPage = publicRoutes.includes(pathname) || pathname.startsWith("/reset-password");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     
-    if (!token && !isAuthPage) {
+    if (!token && !isPublicPage) {
       // Not logged in and trying to access protected page
       setIsAuthorized(false);
       router.push("/login");
     } else {
-      // Logged in OR accessing public auth page
+      // Logged in OR accessing public page
       setIsAuthorized(true);
     }
     setCheckingAuth(false);
-  }, [pathname, isAuthPage, router]);
+  }, [pathname, isPublicPage, router]);
 
   // If we are still checking auth or not authorized (and not on an auth page), show nothing or a loader
   if (checkingAuth) {
@@ -39,23 +39,26 @@ export default function LayoutContent({ children }) {
     );
   }
 
-  // Show the content only if authorized or it's an auth page
-  if (!isAuthorized && !isAuthPage) {
+  // Show the content only if authorized or it's a public page
+  if (!isAuthorized && !isPublicPage) {
     return null; // This will be handled by the router.push above
   }
 
+  const pureAuthPages = ["/login", "/register", "/admin-login", "/forgot-password"];
+  const isPureAuthPage = pureAuthPages.includes(pathname) || pathname.startsWith("/reset-password");
+
   return (
-    <div className={isAuthPage ? "auth-layout-wrapper" : ""}>
+    <div className={isPureAuthPage ? "auth-layout-wrapper" : ""}>
       <CustomCursor />
       <Header />
       <main style={{ 
-        minHeight: isAuthPage ? "100vh" : "60vh", 
-        paddingBottom: isAuthPage ? 0 : 80,
-        background: isAuthPage ? "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)" : "transparent"
+        minHeight: isPureAuthPage ? "100vh" : "60vh", 
+        paddingBottom: isPureAuthPage ? 0 : 80,
+        background: isPureAuthPage ? "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)" : "transparent"
       }}>
         {children}
       </main>
-      {!isAuthPage && <Footer />}
+      {!isPureAuthPage && <Footer />}
     </div>
   );
 }

@@ -4,11 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const links = [
+const baseLinks = [
   { to: "/", label: "Home", icon: "fa-house" },
   { to: "/About-us", label: "About", icon: "fa-circle-info" },
+];
+
+const protectedLinks = [
   { to: "/favourites", label: "Favourites", icon: "fa-heart" },
   { to: "/bookings", label: "Bookings", icon: "fa-calendar-check" },
+];
+
+const adminLinks = [
+  { to: "/host/add-home", label: "Add Home", icon: "fa-plus" },
+  { to: "/admin", label: "Admin", icon: "fa-shield-halved" },
 ];
 
 export default function Header() {
@@ -16,6 +24,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -29,19 +38,39 @@ export default function Header() {
     if (!mounted) return;
     // Check login state
     try {
-      const stored = localStorage.getItem("user") || localStorage.getItem("admin");
-      if (stored) setUser(JSON.parse(stored));
-      else setUser(null);
+      const adminStored = localStorage.getItem("admin");
+      const userStored = localStorage.getItem("user");
+
+      if (adminStored) {
+        setUser(JSON.parse(adminStored));
+        setIsAdmin(true);
+      } else if (userStored) {
+        setUser(JSON.parse(userStored));
+        setIsAdmin(false);
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
     } catch { }
-  }, [pathname, mounted]); // Re-check on route change
+  }, [pathname, mounted]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("admin");
     setUser(null);
+    setIsAdmin(false);
     window.location.href = "/login";
   };
+
+  // Determine which links to show
+  const currentLinks = [...baseLinks];
+  if (user) {
+    currentLinks.push(...protectedLinks);
+    if (isAdmin) {
+      currentLinks.push(...adminLinks);
+    }
+  }
 
   return (
     <header
@@ -87,7 +116,7 @@ export default function Header() {
           style={{ display: "flex", gap: 4, listStyle: "none", margin: 0, padding: 0, alignItems: "center" }}
           className="hidden-mobile"
         >
-          {links.map((link, i) => {
+          {currentLinks.map((link, i) => {
             const active = pathname === link.to;
             return (
               <li key={link.to} className={`animate-fade-down delay-${(i + 1) * 100}`}>
@@ -186,7 +215,7 @@ export default function Header() {
           className="animate-fade-down"
           style={{ background: "rgba(15,23,42,0.98)", borderTop: "1px solid rgba(99,102,241,0.2)", padding: "12px 24px 20px" }}
         >
-          {links.map((link) => {
+          {currentLinks.map((link) => {
             const active = pathname === link.to;
             return (
               <Link key={link.to} href={link.to} onClick={() => setMenuOpen(false)}
