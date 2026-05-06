@@ -4,11 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const baseLinks = [
-  { to: "/", label: "Home", icon: "fa-house" },
-  { to: "/About-us", label: "About", icon: "fa-circle-info" },
-];
-
 const protectedLinks = [
   { to: "/favourites", label: "Favourites", icon: "fa-heart" },
   { to: "/bookings", label: "Bookings", icon: "fa-calendar-check" },
@@ -64,7 +59,15 @@ export default function Header() {
   };
 
   // Determine which links to show
-  const currentLinks = [...baseLinks];
+  const currentLinks = [
+    { to: "/", label: "Home", icon: "fa-house" },
+    { to: "/About-us", label: "About", icon: "fa-circle-info" },
+  ];
+
+  if (!isAdmin) {
+    currentLinks.push({ to: "/admin-login", label: "Admin Login", icon: "fa-shield-halved" });
+  }
+
   if (user) {
     currentLinks.push(...protectedLinks);
     if (isAdmin) {

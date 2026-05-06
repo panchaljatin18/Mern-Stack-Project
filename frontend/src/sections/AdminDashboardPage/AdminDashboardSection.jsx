@@ -9,10 +9,12 @@ export default function AdminPage() {
 
   const [admin, setAdmin] = useState(null);
   const [admins, setAdmins] = useState([]);
+  const [users, setUsers] = useState([]);
   const [homes, setHomes] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState(null); // For edit modal
 
   useEffect(() => {
     const storedAdmin = localStorage.getItem("admin");
@@ -60,6 +62,10 @@ export default function AdminPage() {
           : homesRes.homes || []
       );
 
+      // Fetch users
+      const usersRes = await api.listUsers();
+      setUsers(usersRes.users || []);
+
       // Fetch bookings
       const bookingsRes = await api.getBookings();
 
@@ -86,6 +92,30 @@ export default function AdminPage() {
     try {
       await api.toggleAdminStatus(id);
 
+      fetchData(admin);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    try {
+      await api.adminDeleteUser(id);
+      fetchData(admin);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await api.adminUpdateUser(editingUser._id, {
+        name: editingUser.name,
+        email: editingUser.email,
+      });
+      setEditingUser(null);
       fetchData(admin);
     } catch (err) {
       alert(err.message);
@@ -187,6 +217,10 @@ export default function AdminPage() {
             {
               id: "bookings",
               label: "Bookings",
+            },
+            {
+              id: "users",
+              label: "Manage Users",
             },
           ].map((item) => {
             if (item.superOnly && admin?.role !== "super_admin") {
@@ -307,6 +341,18 @@ export default function AdminPage() {
                 background: "rgba(255,255,255,0.03)",
               }}
             >
+              <h2>Total Users</h2>
+
+              <h1>{users.length}</h1>
+            </div>
+
+            <div
+              style={{
+                padding: 24,
+                borderRadius: 20,
+                background: "rgba(255,255,255,0.03)",
+              }}
+            >
               <h2>Admins</h2>
 
               <h1>{admins.length || 1}</h1>
@@ -320,9 +366,9 @@ export default function AdminPage() {
             {homes.length === 0 ? (
               <p>No homes found.</p>
             ) : (
-              homes.map((home, index) => (
+              homes.map((home) => (
                 <div
-                  key={index}
+                  key={home._id || home.id}
                   style={{
                     padding: 20,
                     borderRadius: 16,
@@ -351,9 +397,9 @@ export default function AdminPage() {
             {bookings.length === 0 ? (
               <p>No bookings found.</p>
             ) : (
-              bookings.map((booking, index) => (
+              bookings.map((booking) => (
                 <div
-                  key={index}
+                  key={booking._id || booking.id || `booking-${booking.bookedAt}-${booking.houseName}`}
                   style={{
                     padding: 20,
                     borderRadius: 16,
@@ -372,6 +418,87 @@ export default function AdminPage() {
           </div>
         )}
 
+        {activeTab === "users" && (
+          <div style={{ marginTop: 30 }}>
+            <h2 style={{ marginBottom: 20 }}>Registered Users</h2>
+
+            {users.length === 0 ? (
+              <p>No users found.</p>
+            ) : (
+              users.map((u) => (
+                <div
+                  key={u._id || u.id}
+                  style={{
+                    padding: 20,
+                    borderRadius: 16,
+                    background: "rgba(255,255,255,0.03)",
+                    marginBottom: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <h3>{u.name}</h3>
+                    <p style={{ color: "rgba(255,255,255,0.6)" }}>{u.email}</p>
+                    <small style={{ color: "rgba(255,255,255,0.4)" }}>Registered: {new Date(u.createdAt).toLocaleDateString()}</small>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(99,102,241,0.1)", color: "#6366f1", fontSize: 12, fontWeight: 700 }}>
+                      USER
+                    </div>
+                    <button
+                      onClick={() => setEditingUser(u)}
+                      style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: "rgba(255,255,255,0.05)", color: "#fff", cursor: "pointer", fontSize: 14 }}
+                    >
+                      <i className="fas fa-edit" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(u._id || u.id)}
+                      style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: "rgba(239,68,68,0.1)", color: "#ef4444", cursor: "pointer", fontSize: 14 }}
+                    >
+                      <i className="fas fa-trash" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Edit User Modal */}
+        {editingUser && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 20 }}>
+            <div className="animate-scale-in" style={{ background: "#1e1b4b", padding: 32, borderRadius: 24, width: "100%", maxWidth: 400, border: "1px solid rgba(255,255,255,0.1)" }}>
+              <h2 style={{ marginBottom: 24, fontSize: 24, fontWeight: 800 }}>Edit User</h2>
+              <form onSubmit={handleUpdateUser}>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>NAME</label>
+                  <input
+                    type="text"
+                    value={editingUser.name}
+                    onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                    style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff" }}
+                  />
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>EMAIL</label>
+                  <input
+                    type="email"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                    style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff" }}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#fff", cursor: "pointer", fontWeight: 700 }}>Cancel</button>
+                  <button type="submit" style={{ flex: 1, padding: 12, borderRadius: 12, border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", cursor: "pointer", fontWeight: 700 }}>Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {activeTab === "admins" &&
           admin?.role === "super_admin" && (
             <div style={{ marginTop: 30 }}>
@@ -385,7 +512,7 @@ export default function AdminPage() {
 
               {admins.map((a) => (
                 <div
-                  key={a.id}
+                  key={a._id || a.id}
                   style={{
                     padding: 20,
                     borderRadius: 16,
@@ -404,9 +531,9 @@ export default function AdminPage() {
                     <small>{a.role}</small>
                   </div>
 
-                  {a.id !== admin.id && (
+                  {(a._id || a.id) !== (admin._id || admin.id) && (
                     <button
-                      onClick={() => toggleAdmin(a.id)}
+                      onClick={() => toggleAdmin(a._id || a.id)}
                       style={{
                         padding: "10px 16px",
                         borderRadius: 10,

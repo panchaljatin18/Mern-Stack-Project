@@ -1,3 +1,4 @@
+const User = require("../models/User");
 const Admin = require("../models/Admin");
 const { sendTokenResponse } = require("../utils/jwt");
 
@@ -263,5 +264,60 @@ exports.toggleAdminStatus = async (req, res) => {
       success: false,
       error: "Failed to update admin status.",
     });
+  }
+};
+/**
+ * @route   GET /api/admin/users
+ * @desc    List all registered users
+ * @access  Private (admin/super_admin)
+ */
+exports.listUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password -__v").sort({ createdAt: -1 });
+    res.json({ success: true, count: users.length, users });
+  } catch (err) {
+    console.error("List users error:", err);
+    res.status(500).json({ success: false, error: "Failed to fetch users." });
+  }
+};
+
+/**
+ * @route   PUT /api/admin/users/:id
+ * @desc    Update user details
+ * @access  Private (admin/super_admin)
+ */
+exports.updateUser = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, email },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Update failed." });
+  }
+};
+
+/**
+ * @route   DELETE /api/admin/users/:id
+ * @desc    Delete user
+ * @access  Private (admin/super_admin)
+ */
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+    res.json({ success: true, message: "User deleted." });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Delete failed." });
   }
 };

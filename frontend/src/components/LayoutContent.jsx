@@ -48,13 +48,14 @@ export default function LayoutContent({ children }) {
   const isPureAuthPage = pureAuthPages.includes(pathname) || pathname.startsWith("/reset-password");
 
   return (
-    <div className={isPureAuthPage ? "auth-layout-wrapper" : ""}>
+    <div className={isPureAuthPage ? "auth-layout-wrapper" : ""} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <CustomCursor />
       <Header />
       <main style={{ 
-        minHeight: isPureAuthPage ? "100vh" : "60vh", 
-        paddingBottom: isPureAuthPage ? 0 : 80,
-        background: isPureAuthPage ? "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)" : "transparent"
+        flex: 1,
+        minHeight: isPureAuthPage ? "100vh" : "auto", 
+        paddingBottom: isPureAuthPage ? 0 : 40,
+        background: isPureAuthPage ? "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)" : "#0f172a"
       }}>
         {children}
       </main>

@@ -7,8 +7,7 @@ import { api } from "../../lib/api";
 
 export default function AdminLoginPageSection() {
   const router = useRouter();
-  const [mode, setMode] = useState("login"); // "login" | "setup"
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,29 +27,17 @@ export default function AdminLoginPageSection() {
       setError("Please fill in all required fields.");
       return;
     }
-    if (mode === "setup" && !form.name) {
-      setError("Name is required for setup.");
-      return;
-    }
 
     setLoading(true);
     try {
-      let data;
-      if (mode === "setup") {
-        data = await api.adminRegister(form);
-        setSuccess("Super Admin created! You can now login.");
-        setMode("login");
-        setForm({ name: "", email: form.email, password: "" });
-      } else {
-        data = await api.adminLogin({ email: form.email, password: form.password });
-        if (data.success) {
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("admin", JSON.stringify(data.admin));
-          router.push("/admin");
-        }
+      const data = await api.adminLogin({ email: form.email, password: form.password });
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("admin", JSON.stringify(data.admin));
+        router.push("/admin");
       }
     } catch (err) {
-      setError(err.message || "Operation failed.");
+      setError(err.message || "Login failed.");
     } finally {
       setLoading(false);
     }
@@ -126,42 +113,7 @@ export default function AdminLoginPageSection() {
           padding: "40px 36px",
           boxShadow: "0 32px 64px rgba(0,0,0,0.5)",
         }}>
-          {/* Mode toggle */}
-          <div style={{ display: "flex", gap: 4, marginBottom: 28, padding: 4, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            {[
-              { key: "login", label: "Login", icon: "fa-right-to-bracket" },
-              { key: "setup", label: "First Setup", icon: "fa-wand-magic-sparkles" },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => { setMode(tab.key); setError(""); setSuccess(""); }}
-                style={{
-                  flex: 1, padding: "10px", borderRadius: 10, border: "none",
-                  background: mode === tab.key ? "linear-gradient(135deg, #ef4444, #dc2626)" : "transparent",
-                  color: mode === tab.key ? "#fff" : "rgba(255,255,255,0.5)",
-                  fontWeight: 700, fontSize: 13, cursor: "pointer",
-                  boxShadow: mode === tab.key ? "0 4px 12px rgba(239,68,68,0.3)" : "none",
-                  transition: "all 0.2s",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                }}
-              >
-                <i className={`fas ${tab.icon}`} style={{ fontSize: 11 }} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           <form onSubmit={handleSubmit}>
-            {/* Name (setup only) */}
-            {mode === "setup" && (
-              <div className="animate-fade-up" style={{ marginBottom: 18 }}>
-                <label htmlFor="admin-name" style={labelStyle}>
-                  <i className="fas fa-user" style={{ marginRight: 6, color: "#ef4444" }} />Name
-                </label>
-                <input id="admin-name" type="text" name="name" value={form.name} onChange={handleChange} placeholder="Super Admin" style={inputStyle} />
-              </div>
-            )}
-
             {/* Email */}
             <div style={{ marginBottom: 18 }}>
               <label htmlFor="admin-email" style={labelStyle}>
@@ -179,7 +131,7 @@ export default function AdminLoginPageSection() {
                 <i className="fas fa-lock" style={{ marginRight: 6, color: "#ef4444" }} />Password
               </label>
               <div style={{ position: "relative" }}>
-                <input id="admin-password" type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="••••••••" autoComplete={mode === "setup" ? "new-password" : "current-password"} style={{ ...inputStyle, paddingRight: 48 }}
+                <input id="admin-password" type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="••••••••" autoComplete="current-password" style={{ ...inputStyle, paddingRight: 48 }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.boxShadow = "0 0 0 4px rgba(239,68,68,0.15)"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.boxShadow = "none"; }}
                 />
@@ -195,11 +147,6 @@ export default function AdminLoginPageSection() {
                 <i className="fas fa-circle-exclamation" />{error}
               </div>
             )}
-            {success && (
-              <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: "#22c55e", fontSize: 13, fontWeight: 600, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                <i className="fas fa-circle-check" />{success}
-              </div>
-            )}
 
             {/* Submit */}
             <button type="submit" disabled={loading} className="btn-press" style={{
@@ -212,9 +159,9 @@ export default function AdminLoginPageSection() {
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
               {loading ? (
-                <><i className="fas fa-spinner fa-spin" />{mode === "setup" ? "Creating..." : "Signing in..."}</>
+                <><i className="fas fa-spinner fa-spin" />Signing in...</>
               ) : (
-                <><i className={`fas ${mode === "setup" ? "fa-wand-magic-sparkles" : "fa-shield-halved"}`} />{mode === "setup" ? "Create Super Admin" : "Admin Sign In"}</>
+                <><i className="fas fa-shield-halved" />Admin Sign In</>
               )}
             </button>
           </form>
@@ -226,14 +173,6 @@ export default function AdminLoginPageSection() {
             </Link>
           </div>
         </div>
-
-        {/* Info */}
-        {mode === "setup" && (
-          <div className="animate-fade-up delay-200" style={{ marginTop: 16, padding: "12px 16px", borderRadius: 14, background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.15)", color: "rgba(255,255,255,0.6)", fontSize: 12, textAlign: "center" }}>
-            <i className="fas fa-circle-info" style={{ color: "#fb923c", marginRight: 6 }} />
-            First setup creates the Super Admin account. This can only be done once.
-          </div>
-        )}
       </div>
     </main>
   );

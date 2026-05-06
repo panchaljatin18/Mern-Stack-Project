@@ -29,7 +29,14 @@ export async function apiFetch(endpoint, options = {}) {
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
 
-    const data = await res.json();
+    let data;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(text || `HTTP ${res.status}: ${res.statusText}`);
+    }
 
     if (!res.ok) {
       throw new Error(data.error || `HTTP ${res.status}`);
@@ -157,6 +164,19 @@ export const api = {
     }),
 
   listAdmins: () => apiFetch("/admin/list"),
+
+  listUsers: () => apiFetch("/admin/users"),
+
+  adminUpdateUser: (id, data) =>
+    apiFetch(`/admin/users/${id}`, {
+      method: "PUT",
+      body: data,
+    }),
+
+  adminDeleteUser: (id) =>
+    apiFetch(`/admin/users/${id}`, {
+      method: "DELETE",
+    }),
 
   toggleAdminStatus: (id) =>
     apiFetch(`/admin/toggle-status/${id}`, {
