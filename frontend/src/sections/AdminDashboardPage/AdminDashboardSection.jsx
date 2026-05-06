@@ -53,11 +53,21 @@ export default function AdminPage() {
 
       // Fetch homes
       const homesRes = await api.getHomes();
-      setHomes(homesRes || []);
+
+      setHomes(
+        Array.isArray(homesRes)
+          ? homesRes
+          : homesRes.homes || []
+      );
 
       // Fetch bookings
       const bookingsRes = await api.getBookings();
-      setBookings(bookingsRes || []);
+
+      setBookings(
+        Array.isArray(bookingsRes)
+          ? bookingsRes
+          : bookingsRes.bookings || []
+      );
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     } finally {
