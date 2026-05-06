@@ -12,7 +12,11 @@ export default function HomeDetailPage() {
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
-    fetch(`/api/homes/${id}`).then((response) => response.json()).then(setHome);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    fetch(`${API_URL}/api/homes/${id}`)
+      .then((response) => response.json())
+      .then(setHome);
   }, [id]);
 
   if (!home) return <p className="mt-10 text-center">Loading...</p>;
