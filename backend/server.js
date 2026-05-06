@@ -34,6 +34,9 @@ app.use("/api/admin", adminRoutes);
 
 // Simple health check
 app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.get("/", (req, res) => {
+  res.send("Backend API Running");
+});
 
 const PORT = process.env.PORT || 5000;
 
