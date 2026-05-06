@@ -10,6 +10,9 @@ export const metadata = {
     description: "Browse handpicked homes, save your favourites, and book your next perfect stay.",
     type: "website",
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export const viewport = {
