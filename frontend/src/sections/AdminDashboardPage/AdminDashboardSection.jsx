@@ -17,16 +17,25 @@ export default function AdminPage() {
   useEffect(() => {
     const storedAdmin = localStorage.getItem("admin");
 
-    if (!storedAdmin) {
+    if (!storedAdmin || storedAdmin === "undefined") {
       router.push("/admin-login");
       return;
     }
 
-    const parsedAdmin = JSON.parse(storedAdmin);
+    try {
+      const parsedAdmin = JSON.parse(storedAdmin);
 
-    setAdmin(parsedAdmin);
+      setAdmin(parsedAdmin);
 
-    fetchData(parsedAdmin);
+      fetchData(parsedAdmin);
+    } catch (error) {
+      console.error("Invalid admin data:", error);
+
+      localStorage.removeItem("admin");
+      localStorage.removeItem("token");
+
+      router.push("/admin-login");
+    }
   }, []);
 
   const fetchData = async (adminData) => {
