@@ -1,29 +1,27 @@
 const mongoose = require("mongoose");
 
-let isConnected = false;
-
 const connectDB = async () => {
   try {
     const uri = process.env.MONGODB_URI;
+
+    // Check if MongoDB URI exists
     if (!uri) {
-      console.log("⚠️  MONGODB_URI not set — auth features disabled. Set it in .env file.");
-      return;
+      throw new Error("MONGODB_URI is missing in environment variables");
     }
 
+    // Connect to MongoDB Atlas
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
     });
 
-    isConnected = true;
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (err) {
-    console.log(`⚠️  MongoDB connection failed: ${err.message}`);
-    console.log("   Auth features will be unavailable. Install MongoDB or use Atlas URI.");
-    console.log("   Other features (homes, bookings) will work fine with file storage.");
+    console.error(`❌ MongoDB Connection Error: ${err.message}`);
+
+    // Stop app if DB connection fails
+    process.exit(1);
   }
 };
 
-const getConnectionStatus = () => isConnected;
-
-module.exports = { connectDB, getConnectionStatus };
+module.exports = { connectDB };
