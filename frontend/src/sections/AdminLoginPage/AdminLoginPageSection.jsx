@@ -45,7 +45,7 @@ export default function AdminLoginPageSection() {
         data = await api.adminLogin({ email: form.email, password: form.password });
         if (data.success) {
           localStorage.setItem("token", data.token);
-          localStorage.setItem("admin", JSON.stringify(data.user));
+          localStorage.setItem("admin", JSON.stringify(data.admin));
           router.push("/admin");
         }
       }
