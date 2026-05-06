@@ -151,7 +151,7 @@ export const api = {
   adminGetMe: () => apiFetch("/admin/me"),
 
   createAdmin: (data) =>
-    apiFetch("/admin/create-admin", {
+    apiFetch("/admin/register", {
       method: "POST",
       body: data,
     }),
