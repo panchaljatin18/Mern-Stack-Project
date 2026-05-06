@@ -5,7 +5,7 @@ const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
  */
 export async function apiFetch(endpoint, options = {}) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
   try {
     const headers = {
