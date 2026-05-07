@@ -38,6 +38,8 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verificationToken: String,
+    verificationTokenExpire: Date,
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
@@ -63,6 +65,14 @@ userSchema.methods.getResetPasswordToken = function () {
   this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
   this.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
   return resetToken;
+};
+
+/* ── Generate verification token ── */
+userSchema.methods.getVerificationToken = function () {
+  const verifyToken = crypto.randomBytes(32).toString("hex");
+  this.verificationToken = crypto.createHash("sha256").update(verifyToken).digest("hex");
+  this.verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  return verifyToken;
 };
 
 module.exports = mongoose.model("User", userSchema);

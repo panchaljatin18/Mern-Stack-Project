@@ -15,6 +15,8 @@ const hostRoutes = require("./routes/hostRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
+const { sendVerificationLink } = require("./controllers/authController");
+
 const app = express();
 
 // Body parser
@@ -24,10 +26,11 @@ app.use(express.json());
 app.use(cors());
 
 // Mount routers
-app.use("/api", storeRoutes);
-app.use("/api/host", hostRoutes);
+app.post("/api/auth/send-verification", sendVerificationLink); // Explicitly registered here
 app.use("/api/auth", authRoutes);
+app.use("/api/host", hostRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api", storeRoutes);
 
 // Simple health check
 app.get("/health", (req, res) => res.json({ status: "ok" }));

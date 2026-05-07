@@ -13,7 +13,15 @@ export default function LayoutContent({ children }) {
   const [checkingAuth, setCheckingAuth] = useState(true);
   
   // Routes that don't require login
-  const publicRoutes = ["/", "/About-us", "/login", "/register", "/admin-login", "/forgot-password"];
+  const publicRoutes = [
+    "/",
+    "/About-us",
+    "/login",
+    "/register",
+    "/admin-login",
+    "/forgot-password",
+    "/complete-registration",
+  ];
   const isPublicPage = publicRoutes.includes(pathname) || pathname.startsWith("/reset-password");
 
   useEffect(() => {

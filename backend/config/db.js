@@ -18,9 +18,9 @@ const connectDB = async () => {
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (err) {
     console.error(`❌ MongoDB Connection Error: ${err.message}`);
+    console.error("The backend will continue running, but database-dependent features will fail.");
 
-    // Stop app if DB connection fails
-    process.exit(1);
+    // process.exit(1);
   }
 };
 

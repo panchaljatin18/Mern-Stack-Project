@@ -142,6 +142,14 @@ export const api = {
       body: data,
     }),
 
+  verifyEmail: (token) => apiFetch(`/auth/verify-email/${token}`),
+
+  sendVerification: (data) =>
+    apiFetch("/auth/send-verification", {
+      method: "POST",
+      body: data,
+    }),
+
   // Admin Auth
   adminLogin: (data) =>
     apiFetch("/admin/login", {
