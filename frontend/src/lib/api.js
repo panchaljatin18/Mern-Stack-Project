@@ -5,7 +5,10 @@ const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
  */
 export async function apiFetch(endpoint, options = {}) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
+  const timeout = setTimeout(
+    () => controller.abort(new DOMException("Request timed out after 30 seconds", "TimeoutError")),
+    30000
+  );
 
   try {
     const headers = {
@@ -16,7 +19,6 @@ export async function apiFetch(endpoint, options = {}) {
     // Attach auth token if available
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
-
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
@@ -43,6 +45,16 @@ export async function apiFetch(endpoint, options = {}) {
     }
 
     return data;
+  } catch (err) {
+    // Handle abort/timeout errors with a clear message
+    if (err.name === "AbortError" || err.name === "TimeoutError") {
+      throw new Error("Request timed out. Please check your internet connection or try again.");
+    }
+    // Handle network failures (backend not running)
+    if (err.message === "Failed to fetch" || err.message.includes("NetworkError")) {
+      throw new Error("Cannot connect to server. Please make sure the backend is running.");
+    }
+    throw err;
   } finally {
     clearTimeout(timeout);
   }
