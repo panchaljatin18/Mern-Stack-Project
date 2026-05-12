@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const dns = require("dns");
+
+// Force Google DNS to bypass ISP blocking MongoDB SRV records
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const connectDB = async () => {
   try {
@@ -11,8 +15,10 @@ const connectDB = async () => {
 
     // Connect to MongoDB Atlas
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 30000,
+      family: 4, // Force IPv4 — fixes ISP DNS SRV issues
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
