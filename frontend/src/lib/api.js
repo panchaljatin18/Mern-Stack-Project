@@ -1,27 +1,26 @@
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
-const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "")
+const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api"
 
 /**
  * Lightweight fetch wrapper with timeout, error handling, and response parsing.
  */
 export async function apiFetch(endpoint, options = {}) {
-  const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort(new DOMException("Request timed out after 30 seconds", "TimeoutError")),
-    30000
-  );
+  const controller = new AbortController()
+  const timeout = setTimeout(() => {
+    controller.abort()
+  }, 60000)
 
   try {
     const headers = {
       "Content-Type": "application/json",
       ...options.headers,
-    };
+    }
 
     // Attach auth token if available
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`
       }
     }
 
@@ -30,34 +29,39 @@ export async function apiFetch(endpoint, options = {}) {
       headers,
       ...options,
       body: options.body ? JSON.stringify(options.body) : undefined,
-    });
+    })
 
-    let data;
-    const contentType = res.headers.get("content-type");
+    let data
+    const contentType = res.headers.get("content-type")
     if (contentType && contentType.includes("application/json")) {
-      data = await res.json();
+      data = await res.json()
     } else {
-      const text = await res.text();
-      throw new Error(text || `HTTP ${res.status}: ${res.statusText}`);
+      const text = await res.text()
+      throw new Error(text || `HTTP ${res.status}: ${res.statusText}`)
     }
 
     if (!res.ok) {
-      throw new Error(data.error || `HTTP ${res.status}`);
+      throw new Error(data.error || `HTTP ${res.status}`)
     }
 
-    return data;
+    return data
   } catch (err) {
     // Handle abort/timeout errors with a clear message
-    if (err.name === "AbortError" || err.name === "TimeoutError") {
-      throw new Error(". Please check your internet connection or try again.");
+    if (err.name === "AbortError") {
+      throw new Error("Server is taking too long to respond. Please try again.")
     }
     // Handle network failures (backend not running)
-    if (err.message === "Failed to fetch" || err.message.includes("NetworkError")) {
-      throw new Error("Cannot connect to server. Please make sure the backend is running.");
+    if (
+      err.message === "Failed to fetch" ||
+      err.message.includes("NetworkError")
+    ) {
+      throw new Error(
+        "Cannot connect to server. Please make sure the backend is running.",
+      )
     }
-    throw err;
+    throw err
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timeout)
   }
 }
 
@@ -203,4 +207,4 @@ export const api = {
     apiFetch(`/admin/toggle-status/${id}`, {
       method: "PUT",
     }),
-};
+}
