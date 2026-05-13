@@ -1,4 +1,5 @@
-const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
 
 /**
  * Lightweight fetch wrapper with timeout, error handling, and response parsing.
