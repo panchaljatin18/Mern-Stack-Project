@@ -5,22 +5,24 @@ const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api"
  * Lightweight fetch wrapper with timeout, error handling, and response parsing.
  */
 export async function apiFetch(endpoint, options = {}) {
-  const controller = new AbortController()
+  const controller = new AbortController();
+
   const timeout = setTimeout(() => {
-    controller.abort()
-  }, 60000)
+    controller.abort();
+  }, 60000);
 
   try {
     const headers = {
       "Content-Type": "application/json",
       ...options.headers,
-    }
+    };
 
     // Attach auth token if available
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
+
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`
+        headers["Authorization"] = `Bearer ${token}`;
       }
     }
 
@@ -29,42 +31,48 @@ export async function apiFetch(endpoint, options = {}) {
       headers,
       ...options,
       body: options.body ? JSON.stringify(options.body) : undefined,
-    })
+    });
 
-    let data
-    const contentType = res.headers.get("content-type")
+    let data;
+
+    const contentType = res.headers.get("content-type");
+
     if (contentType && contentType.includes("application/json")) {
-      data = await res.json()
+      data = await res.json();
     } else {
-      const text = await res.text()
-      throw new Error(text || `HTTP ${res.status}: ${res.statusText}`)
+      const text = await res.text();
+      throw new Error(text || `HTTP ${res.status}: ${res.statusText}`);
     }
 
     if (!res.ok) {
-      throw new Error(data.error || `HTTP ${res.status}`)
+      throw new Error(data.error || `HTTP ${res.status}`);
     }
 
-    return data
+    return data;
+
   } catch (err) {
-    // Handle abort/timeout errors with a clear message
+
     if (err.name === "AbortError") {
-      throw new Error("Server is taking too long to respond. Please try again.")
+      throw new Error(
+        "Server is taking too long to respond. Please try again."
+      );
     }
-    // Handle network failures (backend not running)
+
     if (
       err.message === "Failed to fetch" ||
       err.message.includes("NetworkError")
     ) {
       throw new Error(
-        "Cannot connect to server. Please make sure the backend is running.",
-      )
+        "Cannot connect to server. Please make sure the backend is running."
+      );
     }
-    throw err
+
+    throw err;
+
   } finally {
-    clearTimeout(timeout)
+    clearTimeout(timeout);
   }
 }
-
 /* ── Convenience methods ── */
 
 export const api = {
