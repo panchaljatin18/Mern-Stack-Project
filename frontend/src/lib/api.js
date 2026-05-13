@@ -1,40 +1,54 @@
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "")
-const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api"
+const RAW_API_URL = (process.env.NEXT_PUBLIC_API_URL || "").trim().replace(/\/+$/, "");
+const API_ORIGIN = RAW_API_URL.replace(/\/api$/i, "");
+const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
+const DEFAULT_TIMEOUT_MS = 60000;
 
 /**
  * Lightweight fetch wrapper with timeout, error handling, and response parsing.
  */
 export async function apiFetch(endpoint, options = {}) {
-  const controller = new AbortController();
+  const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : DEFAULT_TIMEOUT_MS;
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
+  const fetchOptions = { ...options };
+  delete fetchOptions.timeoutMs;
+
+  let requestBody = fetchOptions.body;
+  if (requestBody !== undefined && requestBody !== null && !isFormData && typeof requestBody !== "string") {
+    requestBody = JSON.stringify(requestBody);
+  }
+
+  const controller = new AbortController();
   const timeout = setTimeout(() => {
     controller.abort();
-  }, 60000);
+  }, timeoutMs);
 
   try {
     const headers = {
-      "Content-Type": "application/json",
-      ...options.headers,
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...fetchOptions.headers,
     };
 
     // Attach auth token if available
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
-
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
       }
     }
 
     const res = await fetch(`${API_BASE}${endpoint}`, {
       signal: controller.signal,
       headers,
-      ...options,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      ...fetchOptions,
+      body: requestBody,
     });
 
-    let data;
+    if (res.status === 204) {
+      return { success: true };
+    }
 
+    let data;
     const contentType = res.headers.get("content-type");
 
     if (contentType && contentType.includes("application/json")) {
@@ -45,36 +59,30 @@ export async function apiFetch(endpoint, options = {}) {
     }
 
     if (!res.ok) {
-      throw new Error(data.error || `HTTP ${res.status}`);
+      throw new Error(data.error || data.message || `HTTP ${res.status}`);
     }
 
     return data;
-
   } catch (err) {
-
     if (err.name === "AbortError") {
-      throw new Error(
-        "Server is taking too long to respond. Please try again."
-      );
+      throw new Error("Request timed out. Please check your internet connection or try again.");
     }
 
     if (
-      err.message === "Failed to fetch" ||
-      err.message.includes("NetworkError")
+      err?.message === "Failed to fetch"
+      || err?.name === "TypeError"
+      || err?.message?.includes("NetworkError")
     ) {
-      throw new Error(
-        "Cannot connect to server. Please make sure the backend is running."
-      );
+      throw new Error("Cannot connect to server. Please make sure the backend is running.");
     }
 
     throw err;
-
   } finally {
     clearTimeout(timeout);
   }
 }
-/* ── Convenience methods ── */
 
+/* Convenience methods */
 export const api = {
   // Homes
   getHomes: () => apiFetch("/homes"),
@@ -173,6 +181,7 @@ export const api = {
     apiFetch("/auth/send-verification", {
       method: "POST",
       body: data,
+      timeoutMs: 120000,
     }),
 
   // Admin Auth
@@ -215,4 +224,4 @@ export const api = {
     apiFetch(`/admin/toggle-status/${id}`, {
       method: "PUT",
     }),
-}
+};

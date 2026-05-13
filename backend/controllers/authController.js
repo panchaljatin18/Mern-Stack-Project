@@ -1,7 +1,14 @@
 const crypto = require("crypto");
 const User = require("../models/User");
+const PendingRegistration = require("../models/PendingRegistration");
 const { sendTokenResponse } = require("../utils/jwt");
 const sendEmail = require("../utils/sendEmail");
+
+const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+
+const getFrontendBaseUrl = () => {
+  return (process.env.FRONTEND_URL || "http://localhost:3000").trim().replace(/\/+$/, "");
+};
 
 /**
  * @route   POST /api/auth/register
@@ -15,14 +22,19 @@ const sendEmail = require("../utils/sendEmail");
  */
 exports.sendVerificationLink = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = String(req.body?.email || "").trim().toLowerCase();
 
     if (!email) {
       return res.status(400).json({ success: false, error: "Email is required." });
     }
 
-    // Check if email already exists
-    const existingUser = await User.findOne({ email });
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ success: false, error: "Please enter a valid email address." });
+    }
+
+    let existingUser = await User.findOne({ email });
+
+    // Prevent duplicate verified accounts.
     if (existingUser && existingUser.isVerified) {
       return res.status(400).json({
         success: false,
@@ -30,25 +42,24 @@ exports.sendVerificationLink = async (req, res) => {
       });
     }
 
-    // Create or update temporary user record
-    let user = await User.findOne({ email });
-    if (!user) {
-      // Create a skeleton user
-      user = new User({
-        email,
-        name: "Temporary User", // Placeholder
-        password: crypto.randomBytes(8).toString("hex"), // Temp random password
-        isVerified: false,
-      });
+    // Remove old placeholder rows created by the previous verification flow.
+    if (existingUser && !existingUser.isVerified && existingUser.name === "Temporary User") {
+      await User.deleteOne({ _id: existingUser._id });
+      existingUser = null;
     }
 
-    // Generate verification token
-    const verifyToken = user.getVerificationToken();
-    await user.save({ validateBeforeSave: false });
+    let pendingRegistration = await PendingRegistration.findOne({ email });
+    if (!pendingRegistration) {
+      pendingRegistration = new PendingRegistration({ email });
+    }
 
-    // Create verification URL
-    // This now points to a /complete-registration page on frontend
-    const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/complete-registration?token=${verifyToken}&email=${email}`;
+    const verifyToken = pendingRegistration.createVerificationToken();
+    await pendingRegistration.save();
+
+    const frontendBaseUrl = getFrontendBaseUrl();
+    const verifyUrl = `${frontendBaseUrl}/complete-registration?token=${encodeURIComponent(
+      verifyToken
+    )}&email=${encodeURIComponent(email)}`;
 
     const message = `Please verify your email to continue your registration:\n\n${verifyUrl}`;
     const html = `
@@ -64,24 +75,29 @@ exports.sendVerificationLink = async (req, res) => {
     `;
 
     try {
-      await sendEmail({
-        email: user.email,
+      const info = await sendEmail({
+        email,
         subject: "Verify your email - Airbnb Clone",
         message,
         html,
       });
 
+      console.log(`Verification email sent to ${email}. Message ID: ${info?.messageId || "N/A"}`);
+
       res.status(200).json({
         success: true,
-        message: "Verification link sent to " + email,
+        message: `Verification link sent to ${email}`,
       });
     } catch (err) {
-      user.verificationToken = undefined;
-      user.verificationTokenExpire = undefined;
-      await user.save({ validateBeforeSave: false });
-      return res.status(500).json({ success: false, error: "Email could not be sent." });
+      console.error("sendVerificationLink email error:", err.message);
+      await PendingRegistration.deleteOne({ email });
+      return res.status(500).json({
+        success: false,
+        error: "Email could not be sent. Please check email configuration and try again.",
+      });
     }
   } catch (err) {
+    console.error("sendVerificationLink unexpected error:", err.message);
     res.status(500).json({ success: false, error: "Failed to send verification link." });
   }
 };
@@ -93,7 +109,10 @@ exports.sendVerificationLink = async (req, res) => {
  */
 exports.register = async (req, res) => {
   try {
-    const { name, password, token } = req.body;
+    const name = String(req.body?.name || "").trim();
+    const password = String(req.body?.password || "");
+    const token = String(req.body?.token || "");
+    const email = String(req.body?.email || "").trim().toLowerCase();
 
     if (!name || !password || !token) {
       return res.status(400).json({ success: false, error: "All fields and token are required." });
@@ -105,25 +124,51 @@ exports.register = async (req, res) => {
       .update(token)
       .digest("hex");
 
-    const user = await User.findOne({
+    const pendingQuery = {
       verificationToken,
       verificationTokenExpire: { $gt: Date.now() },
-    });
+    };
 
-    if (!user) {
+    if (email) {
+      pendingQuery.email = email;
+    }
+
+    const pendingRegistration = await PendingRegistration.findOne(pendingQuery);
+
+    if (!pendingRegistration) {
       return res.status(400).json({
         success: false,
         error: "Invalid or expired verification session. Please start again.",
       });
     }
 
-    // Finalize user
-    user.name = name;
-    user.password = password; // Will be hashed by pre-save middleware
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpire = undefined;
+    let user = await User.findOne({ email: pendingRegistration.email });
+
+    if (user && user.isVerified) {
+      await PendingRegistration.deleteMany({ email: pendingRegistration.email });
+      return res.status(400).json({
+        success: false,
+        error: "An account with this email already exists.",
+      });
+    }
+
+    if (user) {
+      user.name = name;
+      user.password = password;
+      user.isVerified = true;
+      user.verificationToken = undefined;
+      user.verificationTokenExpire = undefined;
+    } else {
+      user = new User({
+        name,
+        email: pendingRegistration.email,
+        password,
+        isVerified: true,
+      });
+    }
+
     await user.save();
+    await PendingRegistration.deleteMany({ email: pendingRegistration.email });
 
     sendTokenResponse(res, 201, user, "user");
   } catch (err) {
@@ -366,26 +411,37 @@ exports.verifyEmail = async (req, res) => {
       .update(req.params.token)
       .digest("hex");
 
+    const pendingRegistration = await PendingRegistration.findOne({
+      verificationToken,
+      verificationTokenExpire: { $gt: Date.now() },
+    });
+
+    if (pendingRegistration) {
+      return res.json({
+        success: true,
+        email: pendingRegistration.email,
+        message: "Email verified. Please complete registration.",
+      });
+    }
+
+    // Backward compatibility for links created by the previous User-based flow.
     const user = await User.findOne({
       verificationToken,
       verificationTokenExpire: { $gt: Date.now() },
     });
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid or expired verification token.",
-      });
+    if (user) {
+      user.isVerified = true;
+      user.verificationToken = undefined;
+      user.verificationTokenExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+      return res.json({ success: true, message: "Email verified successfully!" });
     }
 
-    // Update user
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpire = undefined;
-    await user.save({ validateBeforeSave: false });
-
-    // Instead of sendTokenResponse, we return success so frontend can redirect
-    res.json({ success: true, message: "Email verified successfully!" });
+    return res.status(400).json({
+      success: false,
+      error: "Invalid or expired verification token.",
+    });
   } catch (err) {
     console.error("Verify email error:", err.message);
     res.status(500).json({ success: false, error: "Failed to verify email." });

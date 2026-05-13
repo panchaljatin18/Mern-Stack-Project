@@ -110,7 +110,7 @@ export default function RegisterPageSection() {
             <div style={{ marginBottom: 18 }}>
               <label style={labelStyle}>Password</label>
               <div style={{ position: "relative" }}>
-                <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="Min 6 characters" style={{ ...inputStyle, paddingRight: 48 }} />
+                <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="Min 8 characters" style={{ ...inputStyle, paddingRight: 48 }} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer" }}>
                   <i className={`fas fa-eye${showPassword ? "-slash" : ""}`} />
                 </button>

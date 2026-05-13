@@ -26,7 +26,7 @@ function CompleteRegistrationContent() {
       setError("Passwords do not match.");
       return;
     }
-    if (!token) {
+    if (!token || !email) {
       setError("Invalid session. Please start registration again.");
       return;
     }
@@ -34,7 +34,7 @@ function CompleteRegistrationContent() {
     setLoading(true);
     setError("");
     try {
-      const data = await api.register({ ...form, token });
+      const data = await api.register({ ...form, token, email });
       if (data.success) {
         setSuccess(true);
         localStorage.setItem("token", data.token);
