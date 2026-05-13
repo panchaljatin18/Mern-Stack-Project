@@ -49,7 +49,7 @@ export async function apiFetch(endpoint, options = {}) {
   } catch (err) {
     // Handle abort/timeout errors with a clear message
     if (err.name === "AbortError" || err.name === "TimeoutError") {
-      throw new Error("Request timed out. Please check your internet connection or try again.");
+      throw new Error(". Please check your internet connection or try again.");
     }
     // Handle network failures (backend not running)
     if (err.message === "Failed to fetch" || err.message.includes("NetworkError")) {
